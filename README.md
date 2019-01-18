@@ -2,7 +2,7 @@
 
 A job queue backend for the [Flowpack.JobQueue.Common](https://github.com/Flowpack/jobqueue-common) package based on [RabbitMQ](https://www.rabbitmq.com).
 
-Disclaimer: This is a firk/remake of an initial version wich was made by [ttreeagency](https://github.com/ttreeagency/)!
+Disclaimer: This is a fork/remake of an initial version wich was made by [ttreeagency](https://github.com/ttreeagency/)!
 
 ## Setup
 

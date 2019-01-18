@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/t3n/JobQueue.RabbitMQ.svg?branch=master)](https://travis-ci.com/t3n/JobQueue.RabbitMQ)
+
 # t3n.JobQueue.RabbitMQ
 
 A job queue backend for the [Flowpack.JobQueue.Common](https://github.com/Flowpack/jobqueue-common) package based on [RabbitMQ](https://www.rabbitmq.com).

@@ -3,6 +3,9 @@
     "type": "neos-package",
     "license": "MIT",
     "name": "t3n/jobqueue-rabbitmq",
+    "config": {
+        "bin-dir": "bin"
+    },
     "require": {
         "flowpack/jobqueue-common": "^3.0.0",
         "php-amqplib/php-amqplib": "^2.8.0",

@@ -165,7 +165,7 @@ class RabbitQueue implements QueueInterface
     /**
      * @inheritdoc
      */
-    public function abort($messageId): void
+    public function abort(string $messageId): void
     {
         $this->channel->basic_nack($messageId);
     }
@@ -173,7 +173,7 @@ class RabbitQueue implements QueueInterface
     /**
      * @inheritdoc
      */
-    public function finish($messageId): bool
+    public function finish(string $messageId): bool
     {
         $this->channel->basic_ack($messageId);
         return true;
@@ -185,7 +185,7 @@ class RabbitQueue implements QueueInterface
      * @inheritdoc
      * NOTE: The beanstalkd implementation only supports to peek the UPCOMING job, so this will throw an exception for $limit != 1.
      */
-    public function peek($limit = 1): array
+    public function peek(int $limit = 1): array
     {
         throw new Exception('Not implemented');
     }

@@ -111,7 +111,7 @@ class RabbitQueue implements QueueInterface
 
     protected function connect(): void
     {
-        if (!$this->connection->isConnected()) {
+        if (! $this->connection->isConnected()) {
             $this->connection->reconnect();
         }
     }

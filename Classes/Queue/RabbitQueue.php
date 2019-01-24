@@ -61,7 +61,7 @@ class RabbitQueue implements QueueInterface
         $insist = isset($clientOptions['insist']) ? (bool) $clientOptions['insist'] : false;
         $loginMethod = isset($clientOptions['loginMethod']) ? (string) $clientOptions['loginMethod'] : 'AMQPLAIN';
 
-        $this->connection = new AMQPStreamConnection($host, $port, $username, $password, $vhost, $insist, $loginMethod, null, 'en_US');
+        $this->connection = new AMQPStreamConnection($host, $port, $username, $password, $vhost, $insist, $loginMethod, null, 'en_US', 3.0, 3.0, null, true);
         $this->channel = $this->connection->channel();
 
         // a worker should only get one message at a time
@@ -106,6 +106,13 @@ class RabbitQueue implements QueueInterface
             if ($this->exchangeName !== '') {
                 $this->channel->queue_bind($this->name, $this->exchangeName, $this->routingKey);
             }
+        }
+    }
+
+    protected function connect(): void
+    {
+        if (!$this->connection->isConnected()) {
+            $this->connection->reconnect();
         }
     }
 
@@ -222,6 +229,7 @@ class RabbitQueue implements QueueInterface
      */
     public function flush(): void
     {
+        $this->connect();
         $this->channel->queue_purge($this->name);
     }
 
@@ -236,6 +244,8 @@ class RabbitQueue implements QueueInterface
      */
     protected function queue(string $payload, array $options = [], int $numberOfReleases = 0): string
     {
+        $this->connect();
+
         $correlationIdentifier = \uniqid('', true);
         $mergedOptions = array_merge($options, ['correlation_id' => $correlationIdentifier, 'numberOfReleases' => 0]);
 
@@ -250,13 +260,14 @@ class RabbitQueue implements QueueInterface
 
         $headers = new AMQPTable($headerOptions);
         $message->set('application_headers', $headers);
-
         $this->channel->basic_publish($message, $this->exchangeName, $this->routingKey !== '' ? $this->routingKey : $this->name);
         return $correlationIdentifier;
     }
 
     protected function dequeue(bool $ack = true, ?int $timeout = null): ?Message
     {
+        $this->connect();
+
         $cache = null;
         $consumerTag = $this->channel->basic_consume($this->name, '', false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
             $deliveryTag = (string) $message->delivery_info['delivery_tag'];

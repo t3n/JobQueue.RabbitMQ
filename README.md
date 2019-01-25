@@ -89,7 +89,7 @@ Flowpack:
 
             queueOptions:
               # don't declare a queue by default
-              # All messages are forwarded to the exchange "t3n"
+              # all messages are forwarded to the exchange "t3n"
               declare: false
               exchangeName: 't3n'
               # the queue should be durable and don't delete itself
@@ -131,7 +131,7 @@ Flowpack:
           options:
             routingKey: 'vendor.jobs.*'
             queueOptions:
-              # This queue should actually be declared
+              # this queue should actually be declared
               declare: true
 
         all-jobs:
@@ -139,6 +139,6 @@ Flowpack:
           options:
             routingKey: '*.jobs.*'
             queueOptions:
-              # This queue should actually be declared
+              # this queue should actually be declared
               declare: true
 ```

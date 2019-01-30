@@ -50,7 +50,6 @@ class RabbitQueue implements QueueInterface
     public function __construct(string $name, array $options = [])
     {
         $this->name = $name;
-
         // Create a connection
         $clientOptions = $options['client'] ?? [];
         $host = $clientOptions['host'] ?? 'localhost';
@@ -183,11 +182,10 @@ class RabbitQueue implements QueueInterface
      * @throws JobQueueException
      *
      * @inheritdoc
-     * NOTE: The beanstalkd implementation only supports to peek the UPCOMING job, so this will throw an exception for $limit != 1.
      */
     public function peek($limit = 1): array
     {
-        throw new Exception('Not implemented');
+        throw new JobQueueException('Not implemented');
     }
 
     /**
@@ -204,7 +202,7 @@ class RabbitQueue implements QueueInterface
 
     public function countReady(): int
     {
-        return 0;
+        return $this->count();
     }
 
     public function countFailed(): int

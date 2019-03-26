@@ -60,7 +60,7 @@ class RabbitQueue implements QueueInterface
         $insist = isset($clientOptions['insist']) ? (bool) $clientOptions['insist'] : false;
         $loginMethod = isset($clientOptions['loginMethod']) ? (string) $clientOptions['loginMethod'] : 'AMQPLAIN';
 
-        $this->connection = new AMQPStreamConnection($host, $port, $username, $password, $vhost, $insist, $loginMethod, null, 'en_US', 3.0, 130.0, null, true);
+        $this->connection = new AMQPStreamConnection($host, $port, $username, $password, $vhost, $insist, $loginMethod, null, 'en_US', 3.0, 3.0, null, true, 0);
         $this->channel = $this->connection->channel();
 
         // a worker should only get one message at a time

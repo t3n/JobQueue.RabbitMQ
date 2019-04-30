@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/t3n/JobQueue.RabbitMQ.svg?branch=master)](https://travis-ci.com/t3n/JobQueue.RabbitMQ)
+[![CircleCI](https://circleci.com/gh/t3n/JobQueue.RabbitMQ.svg?style=svg)](https://circleci.com/gh/t3n/JobQueue.RabbitMQ) [![Latest Stable Version](https://poser.pugx.org/t3n/JobQueue.RabbitMQ/v/stable)](https://packagist.org/packages/t3n/JobQueue.RabbitMQ) [![Total Downloads](https://poser.pugx.org/t3n/JobQueue.RabbitMQ/downloads)](https://packagist.org/packages/t3n/JobQueue.RabbitMQ)
 
 # t3n.JobQueue.RabbitMQ
 
@@ -33,7 +33,7 @@ Flowpack:
         simple-queue:
           className: 't3n\JobQueue\RabbitMQ\Queue\RabbitQueue'
           executeIsolated: true
-    
+
           options:
             queueOptions:
               # we want the queue to persist messages so they are stored even if no consumer (aka worker) is connected
@@ -41,7 +41,7 @@ Flowpack:
               # multiple worker should be able to consume a queue at the same time
               exclusive: false
               autoDelte: false
-    
+
             client:
               host: localhost
               port: 5672
@@ -51,10 +51,10 @@ Flowpack:
 
 A more complex configuration could also configure an exchange and some routing keys.
 In this example we will configure one exchange which all producers connect to. If your
-RabbitMQ server has the `rabbitmq_delayed_message_exchange` plugin ([our docker image](https://www.rabbitmq.com) 
+RabbitMQ server has the `rabbitmq_delayed_message_exchange` plugin ([our docker image](https://www.rabbitmq.com)
 ships it by default) enabled we can also use the delay feature.
 
-This configuration will configure several queues for one exchange. Message are routed 
+This configuration will configure several queues for one exchange. Message are routed
 to the queue based on a `routingKey`. We will use three parts for it: `<project>.<type>.<name>`.
 We will use the type `job` to indicate it's a job to execute. We could also use something like
 `log` or whatever. The shape of the routing key is up to you!

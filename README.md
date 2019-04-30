@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/t3n/JobQueue.RabbitMQ.svg?style=svg)](https://circleci.com/gh/t3n/JobQueue.RabbitMQ) [![Latest Stable Version](https://poser.pugx.org/t3n/JobQueue.RabbitMQ/v/stable)](https://packagist.org/packages/t3n/JobQueue.RabbitMQ) [![Total Downloads](https://poser.pugx.org/t3n/JobQueue.RabbitMQ/downloads)](https://packagist.org/packages/t3n/JobQueue.RabbitMQ)
+[![CircleCI](https://circleci.com/gh/t3n/JobQueue.RabbitMQ.svg?style=svg)](https://circleci.com/gh/t3n/JobQueue.RabbitMQ) [![Latest Stable Version](https://poser.pugx.org/t3n/jobqueue-rabbitmq/v/stable)](https://packagist.org/packages/t3n/jobqueue-rabbitmq) [![Total Downloads](https://poser.pugx.org/t3n/jobqueue-rabbitmq/downloads)](https://packagist.org/packages/t3n/jobqueue-rabbitmq)
 
 # t3n.JobQueue.RabbitMQ
 

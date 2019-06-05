@@ -31,7 +31,7 @@ Neos:
 #              passive: false
 #              durable: false
 #              exclusive: false
-#              autoDelte: true
+#              autoDelete: true
 #              nowait: false
 #              arguments: []
 #              ticket: null

@@ -40,7 +40,7 @@ Flowpack:
               durable: true
               # multiple worker should be able to consume a queue at the same time
               exclusive: false
-              autoDelte: false
+              autoDelete: false
 
             client:
               host: localhost
@@ -94,7 +94,7 @@ Flowpack:
               exchangeName: 't3n'
               # the queue should be durable and don't delete itself
               durable: true
-              autoDelte: false
+              autoDelete: false
               # several worker are allowed per queue
               exclusive: false
 

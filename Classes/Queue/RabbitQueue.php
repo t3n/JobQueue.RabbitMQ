@@ -7,6 +7,7 @@ namespace t3n\JobQueue\RabbitMQ\Queue;
 use Flowpack\JobQueue\Common\Exception as JobQueueException;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
+use Neos\Utility\ObjectAccess;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -43,6 +44,11 @@ class RabbitQueue implements QueueInterface
      * @var string
      */
     protected $routingKey = '';
+
+    /**
+     * @var bool
+     */
+    protected $useDLX = false;
 
     /**
      * @param mixed[] $options
@@ -106,6 +112,8 @@ class RabbitQueue implements QueueInterface
                 $this->channel->queue_bind($this->name, $this->exchangeName, $this->routingKey);
             }
         }
+
+        $this->useDLX = $options['useDLX'] ?? false;
     }
 
     protected function connect(): void
@@ -161,11 +169,16 @@ class RabbitQueue implements QueueInterface
      */
     public function reQueueMessage(Message $message, array $releaseOptions): void
     {
-        // Ack the current message
-        $this->channel->basic_ack($message->getIdentifier());
+        if ($this->useDLX) {
+            // Use nack to move message to DLX
+            $this->channel->basic_nack($message->getIdentifier());
+        } else {
+            // Ack the current message
+            $this->channel->basic_ack($message->getIdentifier());
 
-        // requeue the message
-        $this->queue($message->getPayload(), $releaseOptions, $message->getNumberOfReleases() + 1);
+            // requeue the message
+            $this->queue($message->getPayload(), $releaseOptions, $message->getNumberOfReleases() + 1);
+        }
     }
 
     /**
@@ -173,7 +186,12 @@ class RabbitQueue implements QueueInterface
      */
     public function abort(string $messageId): void
     {
-        $this->channel->basic_nack($messageId);
+        if ($this->useDLX) {
+            // basic_nack would move message to DLX, not actually removing it
+            $this->channel->basic_ack($messageId);
+        } else {
+            $this->channel->basic_nack($messageId);
+        }
     }
 
     /**
@@ -258,7 +276,7 @@ class RabbitQueue implements QueueInterface
 
         $headers = new AMQPTable($headerOptions);
         $message->set('application_headers', $headers);
-        $this->channel->basic_publish($message, $this->exchangeName, $this->routingKey !== '' ? $this->routingKey : $this->name);
+        $this->channel->basic_publish($message, $this->exchangeName, $this->routingKey);
         return $correlationIdentifier;
     }
 
@@ -272,7 +290,11 @@ class RabbitQueue implements QueueInterface
 
             /** @var AMQPTable $applicationHeader */
             $applicationHeader = $message->get('application_headers')->getNativeData();
-            $numberOfReleases = $applicationHeader['x-numberOfReleases'] ?? 0;
+            if ($this->useDLX) {
+                $numberOfReleases = ObjectAccess::getPropertyPath($applicationHeader, 'x-death.0.count') ?? 0;
+            } else {
+                $numberOfReleases = $applicationHeader['x-numberOfReleases'] ?? 0;
+            }
 
             if ($ack) {
                 $this->channel->basic_ack($deliveryTag);

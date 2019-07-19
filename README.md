@@ -86,6 +86,7 @@ Flowpack:
 
           options:
             routingKey: ''
+            useDLX: true # enable support for dead letter exchange, requires configuration in RabbitMQ
 
             queueOptions:
               # don't declare a queue by default

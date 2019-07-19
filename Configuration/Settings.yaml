@@ -22,7 +22,8 @@ Neos:
 #            delay: 5
 #
 #          options:
-#            routingKey: ''  # for advanced exchange configuration
+#            routingKey: '' # for advanced exchange configuration
+#            useDLX: false # support for dead letter exchange
 #
 #            # Options that are used to configure a que
 #            queueOptions:

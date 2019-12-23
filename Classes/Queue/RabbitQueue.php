@@ -38,6 +38,11 @@ class RabbitQueue implements QueueInterface
     /**
      * @var string
      */
+    protected $queueName = '';
+
+    /**
+     * @var string
+     */
     protected $exchangeName = '';
 
     /**
@@ -95,6 +100,7 @@ class RabbitQueue implements QueueInterface
         // declare queue
         $queueOptions = $options['queueOptions'];
 
+        $this->queueName = $queueOptions['name'] ?? $this->name;
         $passive = isset($queueOptions['passive']) ? (bool) $queueOptions['passive'] : false;
         $durable = isset($queueOptions['durable']) ? (bool) $queueOptions['durable'] : false;
         $exclusive = isset($queueOptions['exclusive']) ? (bool) $queueOptions['exclusive'] : false;
@@ -105,11 +111,11 @@ class RabbitQueue implements QueueInterface
         $this->routingKey = $options['routingKey'] ?? '';
 
         if (isset($queueOptions['declare']) ? (bool) $queueOptions['declare'] : true) {
-            $this->channel->queue_declare($this->name, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);
+            $this->channel->queue_declare($this->queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);
 
             // bind the queue to an exchange if there is a specific set
             if ($this->exchangeName !== '') {
-                $this->channel->queue_bind($this->name, $this->exchangeName, $this->routingKey);
+                $this->channel->queue_bind($this->queueName, $this->exchangeName, $this->routingKey);
             }
         }
 
@@ -218,7 +224,7 @@ class RabbitQueue implements QueueInterface
      */
     public function count()
     {
-        return (int) $this->channel->queue_declare($this->name, true)[1];
+        return (int) $this->channel->queue_declare($this->queueName, true)[1];
     }
 
     public function setUp(): void
@@ -246,7 +252,7 @@ class RabbitQueue implements QueueInterface
     public function flush(): void
     {
         $this->connect();
-        $this->channel->queue_purge($this->name);
+        $this->channel->queue_purge($this->queueName);
     }
 
     public function shutdownObject(): void
@@ -285,7 +291,7 @@ class RabbitQueue implements QueueInterface
         $this->connect();
 
         $cache = null;
-        $consumerTag = $this->channel->basic_consume($this->name, '', false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
+        $consumerTag = $this->channel->basic_consume($this->queueName, '', false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
             $deliveryTag = (string) $message->delivery_info['delivery_tag'];
 
             /** @var AMQPTable $applicationHeader */

@@ -8,11 +8,11 @@
     },
     "require": {
         "flowpack/jobqueue-common": "^3.0.0",
-        "php-amqplib/php-amqplib": "^2.8.0",
+        "php-amqplib/php-amqplib": "^2.11",
         "ext-json": "*"
     },
     "require-dev": {
-        "t3n/coding-standard": "~1.0.0"
+        "t3n/coding-standard": "~1.1"
     },
     "autoload": {
         "psr-4": {

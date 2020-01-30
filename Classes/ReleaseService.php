@@ -16,18 +16,10 @@ use t3n\JobQueue\RabbitMQ\Queue\RabbitQueue;
 class ReleaseService
 {
     /**
-     * @Flow\Inject()
-     *
-     * @var QueueManager
-     */
-    protected $queueManager;
-
-    /**
      * @param mixed[] $releaseOptions
      */
-    public function reQueueMessage(QueueInterface $queue, Message $message, array $releaseOptions): void
+    public function reQueueMessage(RabbitQueue $queue, Message $message, array $releaseOptions): void
     {
-        /** @var RabbitQueue $queue */
         $queue->reQueueMessage($message, $releaseOptions);
     }
 }

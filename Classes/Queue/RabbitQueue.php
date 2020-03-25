@@ -255,7 +255,7 @@ class RabbitQueue implements QueueInterface
         $this->channel->queue_purge($this->queueName);
     }
 
-    public function shutdownObject(): void
+    public function __destruct()
     {
         $this->channel->close();
         $this->connection->close();

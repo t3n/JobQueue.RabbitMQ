@@ -115,6 +115,7 @@ Flowpack:
               port: 5672
               username: guest
               password: guest
+              heartbeat: 60 # Sets RabbitMQ connection heartbeat to 60 seconds
 
       queues:
         producer-import:

@@ -117,6 +117,21 @@ class RabbitQueue implements QueueInterface
         $queueOptions = $options['queueOptions'];
 
         $this->queueName = $queueOptions['name'] ?? $this->name;
+
+        $this->useDLX = (bool) ($options['useDLX'] ?? false);
+        if ($this->useDLX
+            && is_string($options['useDLX'])
+            && strtolower($options['useDLX']) !== 'true'
+        ) {
+            $queueOptions['arguments'] = $queueOptions['arguments'] ?? [];
+            if (! isset($queueOptions['arguments']['x-dead-letter-exchange'])) {
+                $queueOptions['arguments']['x-dead-letter-exchange'] = $options['useDLX'];
+            }
+            if (! isset($queueOptions['arguments']['x-dead-letter-routing-key'])) {
+                $queueOptions['arguments']['x-dead-letter-routing-key'] = 'queue.' . $this->queueName;
+            }
+        }
+
         $passive = isset($queueOptions['passive']) ? (bool) $queueOptions['passive'] : false;
         $durable = isset($queueOptions['durable']) ? (bool) $queueOptions['durable'] : false;
         $exclusive = isset($queueOptions['exclusive']) ? (bool) $queueOptions['exclusive'] : false;
@@ -133,9 +148,16 @@ class RabbitQueue implements QueueInterface
             if ($this->exchangeName !== '') {
                 $this->channel->queue_bind($this->queueName, $this->exchangeName, $this->routingKey);
             }
-        }
 
-        $this->useDLX = $options['useDLX'] ?? false;
+            // bind the queue to the dlx
+            if ($this->useDLX && isset($queueOptions['arguments']['x-dead-letter-routing-key'])) {
+                $this->channel->queue_bind(
+                    $this->queueName,
+                    'amq.direct',
+                    $queueOptions['arguments']['x-dead-letter-routing-key']
+                );
+            }
+        }
     }
 
     protected function connect(): void

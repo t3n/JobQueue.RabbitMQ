@@ -51,6 +51,11 @@ class RabbitQueue implements QueueInterface
     protected $routingKey = '';
 
     /**
+     * @var string
+     */
+    protected $consumerTag = '';
+
+    /**
      * @var bool
      */
     protected $useDLX = false;
@@ -136,6 +141,7 @@ class RabbitQueue implements QueueInterface
         }
 
         $this->useDLX = $options['useDLX'] ?? false;
+        $this->consumerTag = $options['consumerTag'] ?? '';
     }
 
     protected function connect(): void
@@ -307,7 +313,7 @@ class RabbitQueue implements QueueInterface
         $this->connect();
 
         $cache = null;
-        $consumerTag = $this->channel->basic_consume($this->queueName, '', false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
+        $consumerTag = $this->channel->basic_consume($this->queueName, $this->consumerTag, false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
             $deliveryTag = (string) $message->delivery_info['delivery_tag'];
 
             /** @var AMQPTable $applicationHeader */

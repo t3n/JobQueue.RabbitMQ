@@ -85,6 +85,7 @@ Flowpack:
             delay: 5
 
           options:
+            consumerTag: '' # optional consumer tag for identification
             routingKey: ''
             useDLX: true # enable support for dead letter exchange, requires configuration in RabbitMQ
 

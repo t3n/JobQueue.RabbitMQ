@@ -1,0 +1,9 @@
+t3n\JobQueue\RabbitMQ\Service\StreamOffsetService:
+  properties:
+    cache:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: t3n_JobQueue_RabbitMQ_StreamOffsets

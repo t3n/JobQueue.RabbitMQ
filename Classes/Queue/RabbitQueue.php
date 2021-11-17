@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -7,7 +6,6 @@ namespace t3n\JobQueue\RabbitMQ\Queue;
 use Flowpack\JobQueue\Common\Exception as JobQueueException;
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
-use Neos\Utility\ObjectAccess;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -54,11 +52,6 @@ class RabbitQueue implements QueueInterface
      * @var string
      */
     protected $consumerTag = '';
-
-    /**
-     * @var bool
-     */
-    protected $useDLX = false;
 
     /**
      * @param mixed[] $options
@@ -140,7 +133,6 @@ class RabbitQueue implements QueueInterface
             }
         }
 
-        $this->useDLX = $options['useDLX'] ?? false;
         $this->consumerTag = $options['consumerTag'] ?? '';
     }
 
@@ -197,16 +189,11 @@ class RabbitQueue implements QueueInterface
      */
     public function reQueueMessage(Message $message, array $releaseOptions): void
     {
-        if ($this->useDLX) {
-            // Use nack to move message to DLX
-            $this->channel->basic_nack($message->getIdentifier());
-        } else {
-            // Ack the current message
-            $this->channel->basic_ack($message->getIdentifier());
+        // Ack the current message
+        $this->channel->basic_ack($message->getIdentifier());
 
-            // requeue the message
-            $this->queue($message->getPayload(), $releaseOptions, $message->getNumberOfReleases() + 1);
-        }
+        // requeue the message
+        $this->queue($message->getPayload(), $releaseOptions, $message->getNumberOfReleases() + 1);
     }
 
     /**
@@ -214,12 +201,7 @@ class RabbitQueue implements QueueInterface
      */
     public function abort(string $messageId): void
     {
-        if ($this->useDLX) {
-            // basic_nack would move message to DLX, not actually removing it
-            $this->channel->basic_ack($messageId);
-        } else {
-            $this->channel->basic_nack($messageId);
-        }
+        $this->channel->basic_nack($messageId);
     }
 
     /**
@@ -308,27 +290,30 @@ class RabbitQueue implements QueueInterface
         return $correlationIdentifier;
     }
 
-    protected function dequeue(bool $ack = true, ?int $timeout = null): ?Message
+    protected function dequeue(bool $ack = true, ?int $timeout = null, array $arguments = []): ?Message
     {
         $this->connect();
 
         $cache = null;
-        $consumerTag = $this->channel->basic_consume($this->queueName, $this->consumerTag, false, false, false, false, function (AMQPMessage $message) use (&$cache, $ack): void {
-            $deliveryTag = (string) $message->delivery_info['delivery_tag'];
+        $consumerTag = $this->channel->basic_consume(
+            $this->queueName,
+            $this->consumerTag,
+            false,
+            false,
+            false,
+            false,
+            function (AMQPMessage $message) use (&$cache, $ack): void {
+                // FIXME: Get delivery_tag without deprecation
+                $deliveryTag = (string) $message->delivery_info['delivery_tag'];
 
-            /** @var AMQPTable $applicationHeader */
-            $applicationHeader = $message->get('application_headers')->getNativeData();
-            if ($this->useDLX) {
-                $numberOfReleases = ObjectAccess::getPropertyPath($applicationHeader, 'x-death.0.count') ?? 0;
-            } else {
-                $numberOfReleases = $applicationHeader['x-numberOfReleases'] ?? 0;
-            }
-
-            if ($ack) {
-                $this->channel->basic_ack($deliveryTag);
-            }
-            $cache = new Message($deliveryTag, json_decode($message->body, true), $numberOfReleases);
-        });
+                if ($ack) {
+                    $this->channel->basic_ack($deliveryTag);
+                }
+                $cache = $this->handleMessage($deliveryTag, $message);
+            },
+            null,
+            $arguments
+        );
 
         while ($cache === null) {
             $this->channel->wait(null, false, $timeout ?: 0);
@@ -337,4 +322,15 @@ class RabbitQueue implements QueueInterface
         $this->channel->basic_cancel($consumerTag);
         return $cache;
     }
+
+    protected function handleMessage(string $deliveryTag, AMQPMessage $message): Message
+    {
+        /** @var AMQPTable $applicationHeader */
+        $applicationHeader = $message->get('application_headers')->getNativeData();
+
+        $numberOfReleases = $applicationHeader['x-numberOfReleases'] ?? 0;
+
+        return new Message($deliveryTag, json_decode($message->body, true), $numberOfReleases);
+    }
+
 }

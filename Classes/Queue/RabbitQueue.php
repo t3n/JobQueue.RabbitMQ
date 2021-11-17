@@ -303,8 +303,7 @@ class RabbitQueue implements QueueInterface
             false,
             false,
             function (AMQPMessage $message) use (&$cache, $ack): void {
-                // FIXME: Get delivery_tag without deprecation
-                $deliveryTag = (string) $message->delivery_info['delivery_tag'];
+                $deliveryTag = (string) $message->get('delivery_tag');
 
                 if ($ack) {
                     $this->channel->basic_ack($deliveryTag);

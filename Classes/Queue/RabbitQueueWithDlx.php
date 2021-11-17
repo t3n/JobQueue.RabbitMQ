@@ -11,18 +11,12 @@ use PhpAmqpLib\Wire\AMQPTable;
 class RabbitQueueWithDlx extends RabbitQueue
 {
 
-    /**
-     * @inheritdoc
-     */
     public function reQueueMessage(Message $message, array $releaseOptions): void
     {
         // Use nack to move message to DLX
         $this->channel->basic_nack($message->getIdentifier());
     }
 
-    /**
-     * @inheritdoc
-     */
     public function abort(string $messageId): void
     {
         // basic_nack would move message to DLX, not actually removing it

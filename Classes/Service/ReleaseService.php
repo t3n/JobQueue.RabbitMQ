@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace t3n\JobQueue\RabbitMQ;
+namespace t3n\JobQueue\RabbitMQ\Service;
 
 use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;

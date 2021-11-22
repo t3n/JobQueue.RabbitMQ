@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -12,10 +13,10 @@ use t3n\JobQueue\RabbitMQ\Service\StreamOffsetService;
 
 class RabbitStreamQueue extends RabbitQueue
 {
-
     /**
-     * @var StreamOffsetService
      * @Flow\Inject
+     *
+     * @var StreamOffsetService
      */
     protected $streamOffsetService;
 
@@ -44,9 +45,11 @@ class RabbitStreamQueue extends RabbitQueue
         return new Message($deliveryTag, json_decode($message->body, true));
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     protected function getStreamOffsetForBasicConsume(): array
     {
         return ['x-stream-offset' => ['I', $this->streamOffsetService->fetch($this->name, $this->consumerTag)]];
     }
-
 }

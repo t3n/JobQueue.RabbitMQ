@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -290,6 +291,11 @@ class RabbitQueue implements QueueInterface
         return $correlationIdentifier;
     }
 
+    /**
+     * @param array<string, array<string, mixed>> $arguments
+     *
+     * @throws \ErrorException
+     */
     protected function dequeue(bool $ack = true, ?int $timeout = null, array $arguments = []): ?Message
     {
         $this->connect();
@@ -331,5 +337,4 @@ class RabbitQueue implements QueueInterface
 
         return new Message($deliveryTag, json_decode($message->body, true), $numberOfReleases);
     }
-
 }

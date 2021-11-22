@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Service;
@@ -18,7 +19,7 @@ class ReleaseService
      */
     public function reQueueMessage(QueueInterface $queue, Message $message, array $releaseOptions): void
     {
-        if (!$queue instanceof RabbitQueue) {
+        if (! $queue instanceof RabbitQueue) {
             return;
         }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -10,7 +11,9 @@ use PhpAmqpLib\Wire\AMQPTable;
 
 class RabbitQueueWithDlx extends RabbitQueue
 {
-
+    /**
+     * @param array<string, mixed> $releaseOptions
+     */
     public function reQueueMessage(Message $message, array $releaseOptions): void
     {
         // Use nack to move message to DLX
@@ -32,5 +35,4 @@ class RabbitQueueWithDlx extends RabbitQueue
 
         return new Message($deliveryTag, json_decode($message->body, true), $numberOfReleases);
     }
-
 }

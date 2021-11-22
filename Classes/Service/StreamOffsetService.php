@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Service;
@@ -11,7 +12,6 @@ use Neos\Flow\Annotations as Flow;
  */
 class StreamOffsetService
 {
-
     /**
      * @var VariableFrontend
      */
@@ -43,5 +43,4 @@ class StreamOffsetService
     {
         return sha1(implode('_', [$name, $consumerTag]));
     }
-
 }

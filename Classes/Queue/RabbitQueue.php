@@ -123,7 +123,7 @@ class RabbitQueue implements QueueInterface
         $nowait = isset($queueOptions['nowait']) ? (bool) $queueOptions['nowait'] : false;
         $arguments = isset($queueOptions['arguments']) ? new AMQPTable($queueOptions['arguments']) : [];
 
-        $this->routingKey = $options['routingKey'] ?? '';
+        $this->routingKey = $options['routingKey'] ?? $this->queueName;
 
         if (isset($queueOptions['declare']) ? (bool) $queueOptions['declare'] : true) {
             $this->channel->queue_declare($this->queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);

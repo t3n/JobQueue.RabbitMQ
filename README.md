@@ -18,6 +18,12 @@ Install the package using composer:
 composer require t3n/jobqueue-rabbitmq
 ```
 
+## Supported Queue Types
+
+* Classic
+* Classic with Dead-Letter-Exchange (see [RabbitMQ docs](https://www.rabbitmq.com/dlx.html))
+* Streams (see [RabbitMQ docs](https://www.rabbitmq.com/streams.html))
+
 ## Configuration
 
 RabbitMQ allows a wide range of configuration and setups. Have a look at `Settings.yaml` for an overview with all available
@@ -145,4 +151,4 @@ Flowpack:
               declare: true
 ```
 
-Make sure to check out the [example Settings.yaml](Configuration/Settings.yaml.example).
+Make sure to check out the [example Settings.yaml](Configuration/Settings.yaml.example) for other example configurations.

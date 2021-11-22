@@ -2,6 +2,23 @@ Flowpack:
   JobQueue:
     Common:
       queues:
+
+        # Simple RabbitMQ Queue without Exchange or DLX
+        basic:
+          className: 't3n\JobQueue\RabbitMQ\Queue\RabbitQueue'
+          executeIsolated: true
+          maximumNumberOfReleases: 3
+
+          options:
+            client:
+              host: localhost
+              port: 5672
+              username: guest
+              password: guest
+              vhost: '/'
+              insist: false
+              loginMethod: 'AMQPLAIN'
+
         #
         # This is a sample configuration that shows all possible configuration options and
         # their defaults
@@ -17,12 +34,11 @@ Flowpack:
             delay: 5
 
           options:
-            routingKey: '' # for advanced exchange configuration
+            routingKey: '' # for advanced exchange configuration, defaults to queue name if not specified
 
-            # Options that are used to configure a que
+            # Options that are used to configure a queue
             queueOptions:
               declare: true
-              exchangeName: ''
               passive: false
               durable: false
               exclusive: false
@@ -61,19 +77,57 @@ Flowpack:
             delay: 5
 
           options:
-            routingKey: '' # for advanced exchange configuration
+            routingKey: '' # for advanced exchange configuration, defaults to queue name if not specified
 
-            # Options that are used to configure a que
+            # Options that are used to configure a queue
             queueOptions:
               declare: true
-              exchangeName: ''
               passive: false
               durable: false
               exclusive: false
               autoDelete: true
               nowait: false
-              arguments: []
+              arguments:
+                'x-dead-letter-exchange': 'retry.dlx'
               ticket: null
+
+            # Options to configure an optional exchange
+            exchange:
+              name: 't3n-exchange' # this field cannot be blank as the default exchange can not be overriden!
+              type: 'direct'
+              passive: false
+              durable: false
+              autoDelete: true
+              internal: false
+              nowait: false
+              arguments: []
+
+            client:
+              host: localhost
+              port: 5672
+              username: guest
+              password: guest
+              vhost: '/'
+              insist: false
+              loginMethod: 'AMQPLAIN'
+
+
+        # RabbitMQ Streams Queue with Exchange
+        demo-for-streams:
+          className: 't3n\JobQueue\RabbitMQ\Queue\RabbitStreamQueue'
+          executeIsolated: true
+          # Stream Queues do not support retries!
+          maximumNumberOfReleases: 0
+
+          options:
+            # Has to be set for Stream Queues, since this is used to track stream offsets.
+            # Make sure this is unique and stable for every consumer application!
+            consumerTag: 'foo'
+
+            queueOptions:
+              # Streams cannot be declared as php-amqplib is not compatible
+              # You will have to manually declare a Stream in your RabbitMQ instance
+              declare: false
 
             # Options to configure an optional exchange
             exchange:

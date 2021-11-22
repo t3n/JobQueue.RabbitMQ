@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<phpunit
+    beStrictAboutChangesToGlobalState="true"
+    beStrictAboutOutputDuringTests="true"
+    bootstrap="Build/BuildEssentials/PhpUnit/UnitTestBootstrap.php"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    timeoutForSmallTests="0">
+    <testsuites>
+        <testsuite name="RabbitMQ">
+            <directory>rabbit/Tests/Unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

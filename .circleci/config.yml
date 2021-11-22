@@ -20,7 +20,7 @@ aliases:
 
   - &persist_to_workspace
     root: .
-    paths: 
+    paths:
       - .
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
     steps:
       - checkout
       - restore_cache: *restore_composer_cache
-      
+
       - run: |
           mkdir rabbit
           shopt -s extglob dotglob
@@ -40,6 +40,7 @@ jobs:
           shopt -u dotglob
           cp rabbit/composer.json.ci composer.json
           cp rabbit/phpcs.xml.dist phpcs.xml.dist
+          cp rabbit/unitTests.xml unitTests.xml
           composer update --ignore-platform-reqs
 
       - save_cache: *save_composer_cache
@@ -53,6 +54,14 @@ jobs:
       - attach_workspace: *attach_workspace
       - run: bin/phpcs rabbit/Classes
 
+  unit-tests:
+    working_directory: *workspace_root
+    docker:
+      - image: *ci-build-image
+    steps:
+      - attach_workspace: *attach_workspace
+      - run: bin/phpunit -c unitTests.xml
+
 workflows:
   version: 2
   build_and_test:
@@ -64,6 +73,10 @@ workflows:
       - lint:
           requires:
             - checkout
+      - unit-tests:
+          requires:
+            - checkout
+
   build_and_test_dependabot:
     jobs:
       - hold:
@@ -75,5 +88,8 @@ workflows:
           requires:
             - hold
       - lint:
+          requires:
+            - checkout
+      - unit-tests:
           requires:
             - checkout

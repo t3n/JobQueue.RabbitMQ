@@ -152,3 +152,18 @@ Flowpack:
 ```
 
 Make sure to check out the [example Settings.yaml](Configuration/Settings.yaml.example) for other example configurations.
+
+## Manually setting Stream Offsets
+
+Stream offsets can be manipulated using the following Flow CLI:
+
+```
+./flow rabbitqueue:setoffsetforstream --queue="<queue name>" --offset="<offset>"
+```
+
+The offset can be specified in a few different ways:
+* `first` will set the offset to the first available message
+* Offset as numerical value (e.g. `10`)
+* Interval (e.g. `10s`) to set the offset to the first message that was published in the last 10 seconds
+
+For more detailed information check the [RabbitMQ Streams](https://www.rabbitmq.com/streams.html#consuming) page.

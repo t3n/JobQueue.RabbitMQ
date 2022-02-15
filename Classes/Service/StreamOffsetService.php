@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Service;
@@ -17,12 +16,23 @@ class StreamOffsetService
      */
     private $cache;
 
-    public function store(string $name, string $consumerTag, int $offset): void
+    /**
+     * @param string $name
+     * @param string $consumerTag
+     * @param string|int $offset
+     * @return void
+     */
+    public function store(string $name, string $consumerTag, $offset): void
     {
         $this->cache->set(self::entryIdentifier($name, $consumerTag), $offset);
     }
 
-    public function fetch(string $name, string $consumerTag): int
+    /**
+     * @param string $name
+     * @param string $consumerTag
+     * @return string|int
+     */
+    public function fetch(string $name, string $consumerTag)
     {
         $offset = $this->cache->get(self::entryIdentifier($name, $consumerTag));
 

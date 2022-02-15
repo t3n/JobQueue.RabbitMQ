@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -69,6 +68,19 @@ class RabbitStreamQueue extends RabbitQueue
         return true;
     }
 
+    /**
+     * @param string|int $offset
+     * @return void
+     */
+    public function setOffset($offset): void
+    {
+        $this->streamOffsetService->store(
+            $this->name,
+            $this->consumerTag,
+            $offset
+        );
+    }
+
     protected function handleMessage(string $deliveryTag, AMQPMessage $message): Message
     {
         // Update current stream offset
@@ -77,6 +89,7 @@ class RabbitStreamQueue extends RabbitQueue
         $applicationHeader = $message->get('application_headers')->getNativeData();
 
         $streamOffset = ObjectAccess::getPropertyPath($applicationHeader, 'x-stream-offset');
+
         $this->streamOffsetService->store(
             $this->name,
             $this->consumerTag,
@@ -91,6 +104,8 @@ class RabbitStreamQueue extends RabbitQueue
      */
     protected function getStreamOffsetForBasicConsume(): array
     {
-        return ['x-stream-offset' => ['I', $this->streamOffsetService->fetch($this->name, $this->consumerTag)]];
+        $offset = $this->streamOffsetService->fetch($this->name, $this->consumerTag);
+
+        return ['x-stream-offset' => [is_int($offset) ? 'I' : 'S', $offset]];
     }
 }

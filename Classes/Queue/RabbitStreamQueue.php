@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace t3n\JobQueue\RabbitMQ\Queue;
@@ -70,7 +71,6 @@ class RabbitStreamQueue extends RabbitQueue
 
     /**
      * @param string|int $offset
-     * @return void
      */
     public function setOffset($offset): void
     {

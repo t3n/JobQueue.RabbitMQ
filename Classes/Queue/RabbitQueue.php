@@ -10,6 +10,7 @@ use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use Neos\Utility\ObjectAccess;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
@@ -325,7 +326,11 @@ class RabbitQueue implements QueueInterface
         });
 
         while ($cache === null) {
-            $this->channel->wait(null, false, $timeout ?: 0);
+            try {
+                $this->channel->wait(null, false, $timeout ?: 0);
+            } catch (AMQPTimeoutException $e) {
+                return null;
+            }
         }
 
         $this->channel->basic_cancel($consumerTag);

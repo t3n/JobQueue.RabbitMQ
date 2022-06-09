@@ -70,6 +70,14 @@ class RabbitStreamQueue extends RabbitQueue
     }
 
     /**
+     * @return string|int
+     */
+    public function getOffset()
+    {
+        return $this->streamOffsetService->fetch($this->name, $this->consumerTag);
+    }
+
+    /**
      * @param string|int $offset
      */
     public function setOffset($offset): void
@@ -104,7 +112,7 @@ class RabbitStreamQueue extends RabbitQueue
      */
     protected function getStreamOffsetForBasicConsume(): array
     {
-        $offset = $this->streamOffsetService->fetch($this->name, $this->consumerTag);
+        $offset = $this->getOffset();
 
         return ['x-stream-offset' => [is_int($offset) ? 'I' : 'S', $offset]];
     }

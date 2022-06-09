@@ -22,6 +22,26 @@ class RabbitQueueCommandController extends CommandController
     protected $queueManager;
 
     /**
+     * Gets the stream offset of a RabbitStreamQueue.
+     *
+     * @param string $queue Queue to set Stream offset for
+     */
+    public function getOffsetForStreamCommand(string $queue): void
+    {
+        $queueImpl = $this->queueManager->getQueue($queue);
+        if (! $queueImpl instanceof RabbitStreamQueue) {
+            $this->outputLine('<error>Setting stream offset is only available for RabbitStreamQueues!</error>');
+            $this->quit(1);
+        }
+
+        $offset = $queueImpl->getOffset();
+        $this->outputLine('<success>Offset for stream "%s" is "%s"</success>', [
+            $queueImpl->getName(),
+            $offset,
+        ]);
+    }
+
+    /**
      * Sets the stream offset of a RabbitStreamQueue to the maximum value, possibly skipping messages.
      *
      * Check https://www.rabbitmq.com/streams.html#consuming
@@ -38,7 +58,7 @@ class RabbitQueueCommandController extends CommandController
         }
 
         $queueImpl->setOffset($offset);
-        $this->outputLine('<success>Set offset to "%s" for stream "%s!</success>', [
+        $this->outputLine('<success>Set offset to "%s" for stream "%s"</success>', [
             $offset,
             $queueImpl->getName(),
         ]);

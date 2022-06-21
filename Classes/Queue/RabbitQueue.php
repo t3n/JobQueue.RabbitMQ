@@ -61,6 +61,18 @@ class RabbitQueue implements QueueInterface
     protected $consumerTag = '';
 
     /**
+     * @var bool
+     */
+    private $hasRegisteredConsumer = false;
+
+    /**
+     * Holds the AMQPMessage that will be handled next.
+     *
+     * @var AMQPMessage|null
+     */
+    private $nextMessage = null;
+
+    /**
      * @param mixed[] $options
      */
     public function __construct(string $name, array $options = [])
@@ -310,6 +322,32 @@ class RabbitQueue implements QueueInterface
     }
 
     /**
+     * @param array $arguments
+     * @return void
+     */
+    protected function startConsumer(array $arguments): void
+    {
+        if ($this->hasRegisteredConsumer) {
+            return;
+        }
+
+        $this->channel->basic_consume(
+            $this->queueName,
+            $this->consumerTag,
+            false,
+            false,
+            false,
+            false,
+            function(AMQPMessage $message) {
+                $this->nextMessage = $message;
+            },
+            null,
+            $arguments
+        );
+        $this->hasRegisteredConsumer = true;
+    }
+
+    /**
      * @param array<string, array<string, mixed>> $arguments
      *
      * @throws \ErrorException
@@ -317,28 +355,9 @@ class RabbitQueue implements QueueInterface
     protected function dequeue(bool $ack = true, ?int $timeout = null, array $arguments = []): ?Message
     {
         $this->connect();
+        $this->startConsumer($arguments);
 
-        $cache = null;
-        $consumerTag = $this->channel->basic_consume(
-            $this->queueName,
-            $this->consumerTag,
-            false,
-            false,
-            false,
-            false,
-            function (AMQPMessage $message) use (&$cache, $ack): void {
-                $deliveryTag = (string) $message->get('delivery_tag');
-
-                if ($ack) {
-                    $this->channel->basic_ack($deliveryTag);
-                }
-                $cache = $this->handleMessage($deliveryTag, $message);
-            },
-            null,
-            $arguments
-        );
-
-        while ($cache === null) {
+        while ($this->nextMessage === null) {
             try {
                 $this->channel->wait(null, false, $timeout ?: 0);
             } catch (AMQPTimeoutException $e) {
@@ -346,8 +365,14 @@ class RabbitQueue implements QueueInterface
             }
         }
 
-        $this->channel->basic_cancel($consumerTag);
-        return $cache;
+        $deliveryTag = (string) $this->nextMessage->get('delivery_tag');
+        if ($ack) {
+            $this->channel->basic_ack($deliveryTag);
+        }
+        $message = $this->handleMessage($deliveryTag, $this->nextMessage);
+        $this->nextMessage = null;
+
+        return $message;
     }
 
     protected function handleMessage(string $deliveryTag, AMQPMessage $message): Message

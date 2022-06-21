@@ -21,7 +21,7 @@ class RabbitQueue implements QueueInterface
     protected $name;
 
     /**
-     * @var array
+     * @var mixed[]
      */
     protected $options;
 
@@ -158,7 +158,6 @@ class RabbitQueue implements QueueInterface
         $autoDelete = isset($queueOptions['autoDelete']) ? (bool) $queueOptions['autoDelete'] : true;
         $nowait = isset($queueOptions['nowait']) ? (bool) $queueOptions['nowait'] : false;
         $arguments = isset($queueOptions['arguments']) ? new AMQPTable($queueOptions['arguments']) : [];
-
 
         if (isset($queueOptions['declare']) ? (bool) $queueOptions['declare'] : true) {
             $this->channel->queue_declare($this->queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);
@@ -324,8 +323,7 @@ class RabbitQueue implements QueueInterface
     }
 
     /**
-     * @param array $arguments
-     * @return void
+     * @param array<string, array<string, mixed>> $arguments
      */
     protected function startConsumer(array $arguments): void
     {
@@ -340,7 +338,7 @@ class RabbitQueue implements QueueInterface
             false,
             false,
             false,
-            function(AMQPMessage $message) {
+            function (AMQPMessage $message): void {
                 $this->nextMessage = $message;
             },
             null,

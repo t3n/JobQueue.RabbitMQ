@@ -117,7 +117,7 @@ class RabbitStreamQueue extends RabbitQueue
     {
         // Update current stream offset
 
-        if (!is_int($this->offset)) {
+        if (! is_int($this->offset)) {
             /** @var AMQPTable $applicationHeader */
             $applicationHeader = $message->get('application_headers')->getNativeData();
             $streamOffset = ObjectAccess::getPropertyPath($applicationHeader, 'x-stream-offset');

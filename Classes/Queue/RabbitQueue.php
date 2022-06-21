@@ -89,82 +89,84 @@ class RabbitQueue implements QueueInterface
 
     protected function connect(): void
     {
-        if (!isset($this->connection) || !isset($this->channel)) {
-            // Create a connection
-            $clientOptions = $this->options['client'] ?? [];
-            $host = $clientOptions['host'] ?? 'localhost';
-            $port = $clientOptions['port'] ?? 5672;
-            $username = $clientOptions['username'] ?? 'guest';
-            $password = $clientOptions['password'] ?? 'guest';
-            $vhost = $clientOptions['vhost'] ?? '/';
-            $insist = isset($clientOptions['insist']) ? (bool) $clientOptions['insist'] : false;
-            $loginMethod = isset($clientOptions['loginMethod']) ? (string) $clientOptions['loginMethod'] : 'AMQPLAIN';
-            $heartbeat = (int) ($clientOptions['heartbeat'] ?? 0);
-
-            $this->connection = new AMQPStreamConnection(
-                $host,
-                $port,
-                $username,
-                $password,
-                $vhost,
-                $insist,
-                $loginMethod,
-                null,
-                'en_US',
-                3.0,
-                3.0,
-                null,
-                true,
-                $heartbeat
-            );
-            $this->channel = $this->connection->channel();
-
-            // a worker should only get one message at a time
-            $this->channel->basic_qos(null, 1, null);
-
-            // declare exchange
-            if (isset($this->options['exchange']) && ! empty($this->options['exchange'])) {
-                $exchangeOptions = $this->options['exchange'];
-
-                $this->exchangeName = $exchangeOptions['name'] ?? '';
-
-                $type = $exchangeOptions['type'] ?? 'direct';
-                $passive = isset($exchangeOptions['passive']) ? (bool) $exchangeOptions['passive'] : false;
-                $durable = isset($exchangeOptions['durable']) ? (bool) $exchangeOptions['durable'] : false;
-                $autoDelete = isset($exchangeOptions['autoDelete']) ? (bool) $exchangeOptions['autoDelete'] : true;
-                $internal = isset($exchangeOptions['internal']) ? (bool) $exchangeOptions['internal'] : false;
-                $nowait = isset($exchangeOptions['nowait']) ?(bool) $exchangeOptions['nowait'] : false;
-
-                $exchangeArguments = [];
-                if (isset($exchangeOptions['arguments']) && ! empty($exchangeOptions['arguments'])) {
-                    $exchangeArguments = new AMQPTable(['x-delayed-type' => 'topic']);
-                }
-                $this->channel->exchange_declare($this->exchangeName, $type, $passive, $durable, $autoDelete, $internal, $nowait, $exchangeArguments);
+        if (isset($this->connection) && isset($this->channel)) {
+            if (! $this->connection->isConnected()) {
+                $this->connection->reconnect();
             }
 
-            // declare queue
-            $queueOptions = $this->options['queueOptions'];
-
-            $passive = isset($queueOptions['passive']) ? (bool) $queueOptions['passive'] : false;
-            $durable = isset($queueOptions['durable']) ? (bool) $queueOptions['durable'] : false;
-            $exclusive = isset($queueOptions['exclusive']) ? (bool) $queueOptions['exclusive'] : false;
-            $autoDelete = isset($queueOptions['autoDelete']) ? (bool) $queueOptions['autoDelete'] : true;
-            $nowait = isset($queueOptions['nowait']) ? (bool) $queueOptions['nowait'] : false;
-            $arguments = isset($queueOptions['arguments']) ? new AMQPTable($queueOptions['arguments']) : [];
-
-
-            if (isset($queueOptions['declare']) ? (bool) $queueOptions['declare'] : true) {
-                $this->channel->queue_declare($this->queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);
-
-                // bind the queue to an exchange if there is a specific set
-                if ($this->exchangeName !== '') {
-                    $this->channel->queue_bind($this->queueName, $this->exchangeName, $this->routingKey);
-                }
-            }
+            return;
         }
 
-        if (! $this->connection->isConnected()) {
-            $this->connection->reconnect();
+        // Create a connection
+        $clientOptions = $this->options['client'] ?? [];
+        $host = $clientOptions['host'] ?? 'localhost';
+        $port = $clientOptions['port'] ?? 5672;
+        $username = $clientOptions['username'] ?? 'guest';
+        $password = $clientOptions['password'] ?? 'guest';
+        $vhost = $clientOptions['vhost'] ?? '/';
+        $insist = isset($clientOptions['insist']) ? (bool) $clientOptions['insist'] : false;
+        $loginMethod = isset($clientOptions['loginMethod']) ? (string) $clientOptions['loginMethod'] : 'AMQPLAIN';
+        $heartbeat = (int) ($clientOptions['heartbeat'] ?? 0);
+
+        $this->connection = new AMQPStreamConnection(
+            $host,
+            $port,
+            $username,
+            $password,
+            $vhost,
+            $insist,
+            $loginMethod,
+            null,
+            'en_US',
+            3.0,
+            3.0,
+            null,
+            true,
+            $heartbeat
+        );
+        $this->channel = $this->connection->channel();
+
+        // a worker should only get one message at a time
+        $this->channel->basic_qos(null, 1, null);
+
+        // declare exchange
+        if (isset($this->options['exchange']) && ! empty($this->options['exchange'])) {
+            $exchangeOptions = $this->options['exchange'];
+
+            $this->exchangeName = $exchangeOptions['name'] ?? '';
+
+            $type = $exchangeOptions['type'] ?? 'direct';
+            $passive = isset($exchangeOptions['passive']) ? (bool) $exchangeOptions['passive'] : false;
+            $durable = isset($exchangeOptions['durable']) ? (bool) $exchangeOptions['durable'] : false;
+            $autoDelete = isset($exchangeOptions['autoDelete']) ? (bool) $exchangeOptions['autoDelete'] : true;
+            $internal = isset($exchangeOptions['internal']) ? (bool) $exchangeOptions['internal'] : false;
+            $nowait = isset($exchangeOptions['nowait']) ?(bool) $exchangeOptions['nowait'] : false;
+
+            $exchangeArguments = [];
+            if (isset($exchangeOptions['arguments']) && ! empty($exchangeOptions['arguments'])) {
+                $exchangeArguments = new AMQPTable(['x-delayed-type' => 'topic']);
+            }
+            $this->channel->exchange_declare($this->exchangeName, $type, $passive, $durable, $autoDelete, $internal, $nowait, $exchangeArguments);
+        }
+
+        // declare queue
+        $queueOptions = $this->options['queueOptions'];
+
+        $passive = isset($queueOptions['passive']) ? (bool) $queueOptions['passive'] : false;
+        $durable = isset($queueOptions['durable']) ? (bool) $queueOptions['durable'] : false;
+        $exclusive = isset($queueOptions['exclusive']) ? (bool) $queueOptions['exclusive'] : false;
+        $autoDelete = isset($queueOptions['autoDelete']) ? (bool) $queueOptions['autoDelete'] : true;
+        $nowait = isset($queueOptions['nowait']) ? (bool) $queueOptions['nowait'] : false;
+        $arguments = isset($queueOptions['arguments']) ? new AMQPTable($queueOptions['arguments']) : [];
+
+
+        if (isset($queueOptions['declare']) ? (bool) $queueOptions['declare'] : true) {
+            $this->channel->queue_declare($this->queueName, $passive, $durable, $exclusive, $autoDelete, $nowait, $arguments);
+
+            // bind the queue to an exchange if there is a specific set
+            if ($this->exchangeName !== '') {
+                $this->channel->queue_bind($this->queueName, $this->exchangeName, $this->routingKey);
+            }
         }
     }
 

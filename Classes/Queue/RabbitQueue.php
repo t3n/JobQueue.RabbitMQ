@@ -9,7 +9,7 @@ use Flowpack\JobQueue\Common\Queue\Message;
 use Flowpack\JobQueue\Common\Queue\QueueInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
-use PhpAmqpLib\Exception\AMQPExceptionInterface;
+use PhpAmqpLib\Exception\AMQPTimeoutException;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 
@@ -365,12 +365,8 @@ class RabbitQueue implements QueueInterface
                 $this->connection->checkHeartBeat();
 
                 $this->channel->wait(null, false, $connectionTimeout ?? $timeout ?? 0);
-            } catch (AMQPExceptionInterface $e) {
-                $this->channel->basic_cancel($this->consumerTag);
-                $this->hasRegisteredConsumer = false;
-                // FIXME: If $timeout is not yet reached, reconnect and try again
-
-                return null;
+            } catch (AMQPTimeoutException $e) {
+                // TODO: Stop waiting after $timeout
             }
         }
 

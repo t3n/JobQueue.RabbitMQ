@@ -358,7 +358,7 @@ class RabbitQueue implements QueueInterface
         $this->startConsumer($arguments);
 
         $connectionTimeout = (int) ($this->options['client']['connectionTimeout'] ?? null);
-        // TODO: Stop waiting after $timeout
+        $exitAfter = $timeout ? (time() + $timeout) : null;
 
         while ($this->nextMessage === null) {
             try {
@@ -366,7 +366,10 @@ class RabbitQueue implements QueueInterface
 
                 $this->channel->wait(null, false, $connectionTimeout ?? $timeout ?? 0);
             } catch (AMQPTimeoutException $e) {
-                // TODO: Stop waiting after $timeout
+            }
+
+            if ($exitAfter !== null && time() >= $exitAfter) {
+                return null;
             }
         }
 

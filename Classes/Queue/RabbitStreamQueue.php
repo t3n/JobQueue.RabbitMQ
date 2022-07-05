@@ -23,11 +23,6 @@ class RabbitStreamQueue extends RabbitQueue
     /**
      * @var int
      */
-    private $offset;
-
-    /**
-     * @var int
-     */
     private $offsetFromPreviousMessage;
 
     public function waitAndTake(?int $timeout = null): ?Message
@@ -72,19 +67,11 @@ class RabbitStreamQueue extends RabbitQueue
     {
         parent::finish($messageId);
 
-        if (is_int($this->offset)) {
-            $this->offset++;
-
-            if ($this->offset % 200 === 0) {
-                $this->streamOffsetService->store(
-                    $this->name,
-                    $this->consumerTag,
-                    $this->offset
-                );
-            }
-        } else {
-            $this->offset = $this->offsetFromPreviousMessage;
-        }
+        $this->streamOffsetService->store(
+            $this->name,
+            $this->consumerTag,
+            $this->offsetFromPreviousMessage
+        );
 
         return true;
     }
@@ -94,10 +81,6 @@ class RabbitStreamQueue extends RabbitQueue
      */
     public function getOffset()
     {
-        if (is_int($this->offset)) {
-            return $this->offset;
-        }
-
         return $this->streamOffsetService->fetch($this->name, $this->consumerTag);
     }
 
@@ -116,26 +99,12 @@ class RabbitStreamQueue extends RabbitQueue
     protected function handleMessage(string $deliveryTag, AMQPMessage $message): Message
     {
         // Update current stream offset
-
-        if (! is_int($this->offset)) {
-            /** @var AMQPTable $applicationHeader */
-            $applicationHeader = $message->get('application_headers')->getNativeData();
-            $streamOffset = ObjectAccess::getPropertyPath($applicationHeader, 'x-stream-offset');
-            $this->offsetFromPreviousMessage = $streamOffset ?? 1;
-        }
+        /** @var AMQPTable $applicationHeader */
+        $applicationHeader = $message->get('application_headers')->getNativeData();
+        $streamOffset = ObjectAccess::getPropertyPath($applicationHeader, 'x-stream-offset');
+        $this->offsetFromPreviousMessage = $streamOffset ?? 1;
 
         return parent::handleMessage($deliveryTag, $message);
-    }
-
-    public function shutdownObject(): void
-    {
-        if (is_int($this->offset)) {
-            $this->streamOffsetService->store(
-                $this->name,
-                $this->consumerTag,
-                $this->offset
-            );
-        }
     }
 
     /**

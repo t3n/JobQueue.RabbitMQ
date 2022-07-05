@@ -48,13 +48,28 @@ class RabbitQueueCommandController extends CommandController
      *
      * @param string $queue Queue to set Stream offset for
      * @param string $offset The offset to store
+     * @param string $type The data type of the offset. Can be int or string
      */
-    public function setOffsetForStreamCommand(string $queue, string $offset): void
+    public function setOffsetForStreamCommand(string $queue, string $offset, string $type = 'int'): void
     {
+        if (!in_array($type, ['int', 'string'], true)) {
+            $this->outputLine('<error>Type must be either "int" or "string", "%s" given!', [$type]);
+            $this->quit(1);
+        }
+
         $queueImpl = $this->queueManager->getQueue($queue);
         if (! $queueImpl instanceof RabbitStreamQueue) {
             $this->outputLine('<error>Setting stream offset is only available for RabbitStreamQueues!</error>');
             $this->quit(1);
+        }
+
+        if ($type === 'int') {
+            if (((string)intval($offset)) !== $offset) {
+                $this->outputLine('<error>Offset "%s" cannot be cast to int! Use "--type=string" for relative offsets.', [$offset]);
+                $this->quit(1);
+            }
+
+            $offset = intval($offset);
         }
 
         $queueImpl->setOffset($offset);
